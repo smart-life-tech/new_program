@@ -11,6 +11,11 @@
 
 UART_HandleTypeDef huart2; // Change this to your UART handle
 
+uint8_t data;
+HAL_StatusTypeDef status;
+
+char uartBuffer[32]; // Buffer to store UART data
+
 void HAL_UART_MspInit(UART_HandleTypeDef *huart);
 
 int x;
@@ -347,6 +352,9 @@ void encoder(void)
 
   if (status == HAL_OK)
   {
+    SSD1306 DISPLAY;
+    HAL_TIM_Base_Start(&htim2);
+    DISPLAY.SSD1306_Init();
     // Process data received from the encoder
     // Example: If the encoder sends position data, you can use it here.
     // For example, assuming the encoder data represents an integer position:
@@ -391,11 +399,6 @@ int main(void)
   HAL_TIM_Base_Start(&htim2);
   DISPLAY.SSD1306_Init();
 
-  uint8_t data;
-  HAL_StatusTypeDef status;
-
-  char uartBuffer[32]; // Buffer to store UART data
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -403,18 +406,20 @@ int main(void)
   while (1)
   {
     int y;
+    /*
+        for (y = 0; y < 8; y = y + 1) // 8 times
+        {
+          DISPLAY.SSD1306_Clear();
 
-    for (y = 0; y < 8; y = y + 1) // 8 times
-    {
-      DISPLAY.SSD1306_Clear();
+          // Update the step count
 
-      // Update the step count
-
-      step(25, 0, 800); // 25 steps (45 degrees) CC
-      HAL_Delay(100);
-    }
-    step(800, 1, 5000); // 800 steps (4 revolutions ) CV
-    HAL_Delay(1000);
+          step(25, 0, 800); // 25 steps (45 degrees) CC
+          HAL_Delay(100);
+        }
+        step(800, 1, 5000); // 800 steps (4 revolutions ) CV
+        */
+    encoder();
+    HAL_Delay(100);
 
     /* USER CODE END WHILE */
 
