@@ -357,7 +357,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
 int encoder()
 {
   status = HAL_I2C_Master_Receive(&hi2c2, I2C_ENCODER_ADDRESS << 1, &data, 1, HAL_MAX_DELAY);
-
+  int encoderValue = data;
   if (status == HAL_OK)
   {
     SSD1306 DISPLAY;
@@ -366,7 +366,7 @@ int encoder()
     // Process data received from the encoder
     // Example: If the encoder sends position data, you can use it here.
     // For example, assuming the encoder data represents an integer position:
-    int encoderValue = data; // Convert data to actual encoder value
+    // Convert data to actual encoder value
     snprintf(uartBuffer, sizeof(uartBuffer), "Encoder Value: %d\r\n", encoderValue);
     HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     std::string displayStr = "encoder: " + std::to_string(encoderValue);
@@ -380,7 +380,7 @@ int encoder()
     // Handle I2C communication error
     Error_Handler();
   }
-  return 0;
+  return encoderValue;
 }
 float CalculateError(float encoder_value, int maintain)
 {
@@ -398,14 +398,7 @@ float CalculatePIDControlSignal(float error)
 void ControlStepperMotor(float control_signal)
 {
   // Apply control signal to stepper motor (e.g., adjust PWM duty cycle)
-  if (control_signal > 0)
-  {
-    step(control_signal, 1, 1000); // forward
-  }
-  else
-  {
-    step(control_signal, 0, 1000); // reverse
-  }
+  step(control_signal, 1, 1000); // forward
 }
 void UpdateIntegralAndDerivative(float error)
 {
