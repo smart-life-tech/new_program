@@ -4,6 +4,15 @@
 #include "SSD1306I2C.h"
 #include <string>
 
+#include "i2c.h"
+#include "gpio.h"
+
+#define I2C_ENCODER_ADDRESS 0x36 // Replace with your encoder's I2C address
+
+UART_HandleTypeDef huart2; // Change this to your UART handle
+
+void HAL_UART_MspInit(UART_HandleTypeDef *huart);
+
 int x;
 int stepCount = 0; // Initialize step count to zero
 /* USER CODE END PM */
@@ -332,15 +341,32 @@ void step(int steps, uint8_t direction, uint16_t delay)
     microDelay(delay);
   }
 }
+void encoder(void)
+{
+  status = HAL_I2C_Master_Receive(&hi2c2, I2C_ENCODER_ADDRESS << 1, &data, 1, HAL_MAX_DELAY);
+
+  if (status == HAL_OK)
+  {
+    // Process data received from the encoder
+    // Example: If the encoder sends position data, you can use it here.
+    // For example, assuming the encoder data represents an integer position:
+    int encoderValue = data; // Convert data to actual encoder value
+    snprintf(uartBuffer, sizeof(uartBuffer), "Encoder Value: %d\r\n", encoderValue);
+    HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
+    std::string displayStr = "encoder: " + std::to_string(encoderValue);
+    DISPLAY.SSD1306_GotoXY(30, 0);
+    DISPLAY.SSD1306_UpdateScreen();
+    DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
+    DISPLAY.SSD1306_UpdateScreen();
+  }
+  else
+  {
+    // Handle I2C communication error
+  }
+}
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -364,6 +390,11 @@ int main(void)
   SSD1306 DISPLAY;
   HAL_TIM_Base_Start(&htim2);
   DISPLAY.SSD1306_Init();
+
+  uint8_t data;
+  HAL_StatusTypeDef status;
+
+  char uartBuffer[32]; // Buffer to store UART data
 
   /* USER CODE END 2 */
 
