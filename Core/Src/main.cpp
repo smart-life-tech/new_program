@@ -46,8 +46,6 @@ void microDelay(uint16_t delay)
     ;
 }
 
-
-
 /* USER CODE END 0 */
 
 /**
@@ -314,6 +312,9 @@ void Error_Handler(void)
 }
 void step(int steps, uint8_t direction, uint16_t delay)
 {
+  SSD1306 DISPLAY;
+  HAL_TIM_Base_Start(&htim2);
+  DISPLAY.SSD1306_Init();
   if (direction == 0)
     HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_SET);
   else
