@@ -21,6 +21,14 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart);
 int x;
 int stepCount = 0; // Initialize step count to zero
 /* USER CODE END PM */
+// PID gains
+float Kp = 1.0;
+float Ki = 0.1;
+float Kd = 0.01;
+
+// Other global variables
+float integral = 0.0;
+float prev_error = 0.0;
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
@@ -346,7 +354,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
     microDelay(delay);
   }
 }
-void encoder(void)
+int encoder()
 {
   status = HAL_I2C_Master_Receive(&hi2c2, I2C_ENCODER_ADDRESS << 1, &data, 1, HAL_MAX_DELAY);
 
@@ -370,7 +378,33 @@ void encoder(void)
   else
   {
     // Handle I2C communication error
+    Error_Handler();
   }
+  return 0;
+}
+float CalculateError(float encoder_value)
+{
+  // Calculate and return error between desired position and encoder value
+  encoder_value - 200; // 200 steps as a sample
+}
+float CalculatePIDControlSignal(float error)
+{
+  // Calculate and return PID control signal
+  integral += error;
+  float derivative = error - prev_error;
+  prev_error = error;
+  return Kp * error + Ki * integral + Kd * derivative;
+}
+void ControlStepperMotor(float control_signal)
+{
+  // Apply control signal to stepper motor (e.g., adjust PWM duty cycle)
+  step(control_signal, 1, 1000);
+}
+
+void UpdateIntegralAndDerivative(float error)
+{
+  // Update integral and derivative terms for the next iteration
+  integral += error;
 }
 int main(void)
 {
@@ -405,21 +439,36 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    int y;
     /*
-        for (y = 0; y < 8; y = y + 1) // 8 times
-        {
-          DISPLAY.SSD1306_Clear();
+    int y;
 
-          // Update the step count
-
-          step(25, 0, 800); // 25 steps (45 degrees) CC
-          HAL_Delay(100);
-        }
-        step(800, 1, 5000); // 800 steps (4 revolutions ) CV
-        */
+    for (y = 0; y < 8; y = y + 1) // 8 times
+    {
+      DISPLAY.SSD1306_Clear();
+      // Update the step count
+      step(25, 0, 800); // 25 steps (45 degrees) CC
+      HAL_Delay(100);
+    }
+   // step(800, 1, 5000); // 800 steps (4 revolutions ) CV
     encoder();
-    HAL_Delay(100);
+    */
+    // Read encoder value
+     DISPLAY.SSD1306_Clear();
+    float encoder_value = encoder();
+
+    // Calculate error
+    float error = CalculateError(encoder_value);
+
+    // Calculate PID control signal
+    float control_signal = CalculatePIDControlSignal(error);
+
+    // Apply control signal to stepper motor
+    ControlStepperMotor(control_signal);
+
+    // Update integral and derivative terms
+    UpdateIntegralAndDerivative(error);
+
+    HAL_Delay(1000);
 
     /* USER CODE END WHILE */
 
