@@ -382,10 +382,10 @@ int encoder()
   }
   return 0;
 }
-float CalculateError(float encoder_value)
+float CalculateError(float encoder_value, int maintain)
 {
   // Calculate and return error between desired position and encoder value
-  encoder_value - 200; // 200 steps as a sample
+  encoder_value - maintain; // 200 steps as a sample
 }
 float CalculatePIDControlSignal(float error)
 {
@@ -398,9 +398,15 @@ float CalculatePIDControlSignal(float error)
 void ControlStepperMotor(float control_signal)
 {
   // Apply control signal to stepper motor (e.g., adjust PWM duty cycle)
-  step(control_signal, 1, 1000);
+  if (control_signal > 0)
+  {
+    step(control_signal, 1, 1000); // forward
+  }
+  else
+  {
+    step(control_signal, 0, 1000); // reverse
+  }
 }
-
 void UpdateIntegralAndDerivative(float error)
 {
   // Update integral and derivative terms for the next iteration
@@ -432,7 +438,7 @@ int main(void)
   SSD1306 DISPLAY;
   HAL_TIM_Base_Start(&htim2);
   DISPLAY.SSD1306_Init();
-
+  step(200, 1, 5000); // move to the 200th step
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -453,11 +459,11 @@ int main(void)
     encoder();
     */
     // Read encoder value
-     DISPLAY.SSD1306_Clear();
+    DISPLAY.SSD1306_Clear();
     float encoder_value = encoder();
 
     // Calculate error
-    float error = CalculateError(encoder_value);
+    float error = CalculateError(encoder_value, 200);
 
     // Calculate PID control signal
     float control_signal = CalculatePIDControlSignal(error);
