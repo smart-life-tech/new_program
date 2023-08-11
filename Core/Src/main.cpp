@@ -1,62 +1,9 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  *
-  *
-  *		SSD1306();			// Constructor
-    uint8_t SSD1306_Init(void);
-    void SSD1306_GotoXY(uint16_t x, uint16_t y);
-    char SSD1306_Puts(char* str, FontDef_t* Font, uint8_t color);
-    char SSD1306_Putc(char ch, FontDef_t* Font, uint8_t color);
-    void SSD1306_UpdateScreen(void);
-    void SSD1306_DrawPixel(uint16_t x, uint16_t y, uint8_t color);
-    void SSD1306_Clear(void);
-    void SSD1306_DrawBitmap(int16_t x, int16_t y, const unsigned char* bitmap, int16_t w, int16_t h, uint8_t color);
-    void SSD1306_DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t color);
-    void SSD1306_DrawRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t color);
-  *
-  *
-  *
-  *
-  *
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
+
 #include "main.h"
 #include "ssd1306.h"
 #include "SSD1306I2C.h"
 #include <string>
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
 int x;
 int stepCount = 0; // Initialize step count to zero
 /* USER CODE END PM */
@@ -124,65 +71,6 @@ void step(int steps, uint8_t direction, uint16_t delay)
  * @brief  The application entry point.
  * @retval int
  */
-int main(void)
-{
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
-
-  /* USER CODE BEGIN Init */
-  // SSD1306_Init();
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
-  SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_USART2_UART_Init();
-  MX_I2C1_Init();
-  MX_I2C2_Init();
-  MX_TIM2_Init();
-  /* USER CODE BEGIN 2 */
-  SSD1306 DISPLAY;
-  HAL_TIM_Base_Start(&htim2);
-  DISPLAY.SSD1306_Init();
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    int y;
-
-    for (y = 0; y < 8; y = y + 1) // 8 times
-    {
-      DISPLAY.SSD1306_Clear();
-
-      // Update the step count
-
-      step(25, 0, 800); // 25 steps (45 degrees) CC
-      HAL_Delay(100);
-    }
-    step(800, 1, 5000); // 800 steps (4 revolutions ) CV
-    HAL_Delay(1000);
-
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
-}
 
 /**
  * @brief System Clock Configuration
@@ -441,7 +329,65 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
+int main(void)
+{
+  /* USER CODE BEGIN 1 */
 
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+  // SSD1306_Init();
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART2_UART_Init();
+  MX_I2C1_Init();
+  MX_I2C2_Init();
+  MX_TIM2_Init();
+  /* USER CODE BEGIN 2 */
+  SSD1306 DISPLAY;
+  HAL_TIM_Base_Start(&htim2);
+  DISPLAY.SSD1306_Init();
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    int y;
+
+    for (y = 0; y < 8; y = y + 1) // 8 times
+    {
+      DISPLAY.SSD1306_Clear();
+
+      // Update the step count
+
+      step(25, 0, 800); // 25 steps (45 degrees) CC
+      HAL_Delay(100);
+    }
+    step(800, 1, 5000); // 800 steps (4 revolutions ) CV
+    HAL_Delay(1000);
+
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+}
 #ifdef USE_FULL_ASSERT
 /**
  * @brief  Reports the name of the source file and the source line number
