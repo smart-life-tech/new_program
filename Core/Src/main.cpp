@@ -360,12 +360,12 @@ void step(int steps, uint8_t direction, uint16_t delay)
 int encoder()
 {
   // Read low byte of raw angle data from AS5600 sensor
-  status = HAL_I2C_Mem_Read(&hi2c1, I2C_ENCODER_ADDRESS << 1, 0x0D, 1, &low_byte, 1, HAL_MAX_DELAY);
+  HAL_StatusTypeDef statuss = HAL_I2C_Mem_Read(&hi2c2, I2C_ENCODER_ADDRESS << 1, 0x0D, 1, &low_byte, 1, HAL_MAX_DELAY);
 
   // Read high byte of raw angle data from AS5600 sensor
-  status |= HAL_I2C_Mem_Read(&hi2c1, I2C_ENCODER_ADDRESS << 1, 0x0C, 1, &high_byte, 1, HAL_MAX_DELAY);
+  statuss |= HAL_I2C_Mem_Read(&hi2c2, I2C_ENCODER_ADDRESS << 1, 0x0C, 1, &high_byte, 1, HAL_MAX_DELAY);
 
-  if (status == HAL_OK)
+  if (statuss == HAL_OK)
   {
     raw_angle = (high_byte << 8) | low_byte;
 
