@@ -13,7 +13,10 @@ UART_HandleTypeDef huart2; // Change this to your UART handle
 
 uint8_t data;
 HAL_StatusTypeDef status;
-
+uint8_t low_byte, high_byte;
+uint16_t raw_angle;
+float deg_angle, start_angle = 0.0, corrected_angle = 0.0, previous_corrected_angle = 0.0;
+int quadrant_number = 0, previous_quadrant_number = 0, number_of_turns = 0;
 char uartBuffer[32]; // Buffer to store UART data
 
 void HAL_UART_MspInit(UART_HandleTypeDef *huart);
@@ -356,10 +359,70 @@ void step(int steps, uint8_t direction, uint16_t delay)
 }
 int encoder()
 {
-  status = HAL_I2C_Master_Receive(&hi2c2, I2C_ENCODER_ADDRESS << 1, &data, 1, HAL_MAX_DELAY);
-  int encoderValue = data;
+  // Read low byte of raw angle data from AS5600 sensor
+  status = HAL_I2C_Mem_Read(&hi2c1, AS5600_ADDRESS << 1, 0x0D, 1, &low_byte, 1, HAL_MAX_DELAY);
+
+  // Read high byte of raw angle data from AS5600 sensor
+  status |= HAL_I2C_Mem_Read(&hi2c1, AS5600_ADDRESS << 1, 0x0C, 1, &high_byte, 1, HAL_MAX_DELAY);
+
   if (status == HAL_OK)
   {
+    raw_angle = (high_byte << 8) | low_byte;
+
+    // Process raw angle data as needed
+    // For example, you can print the raw_angle value
+    char uartBuffer[32];
+    snprintf(uartBuffer, sizeof(uartBuffer), "Raw Angle: %d\r\n", raw_angle);
+    HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
+    // Convert raw angle to degrees
+    deg_angle = raw_angle * 0.087890625;
+
+    // Correct the angle
+    if (start_angle == 0.0)
+    {
+      start_angle = deg_angle;
+    }
+    corrected_angle = deg_angle - start_angle;
+    if (corrected_angle < 0)
+    {
+      corrected_angle += 360.0;
+    }
+
+    // Determine the quadrant
+    if (0 <= corrected_angle && corrected_angle <= 90)
+    {
+      quadrant_number = 1;
+    }
+    else if (90 < corrected_angle && corrected_angle <= 180)
+    {
+      quadrant_number = 2;
+    }
+    else if (180 < corrected_angle && corrected_angle <= 270)
+    {
+      quadrant_number = 3;
+    }
+    else
+    {
+      quadrant_number = 4;
+    }
+
+    // Check for quadrant transition
+    if (quadrant_number != previous_quadrant_number)
+    {
+      if (quadrant_number == 1 && previous_quadrant_number == 4)
+      {
+        number_of_turns += 1;
+      }
+      else if (quadrant_number == 4 && previous_quadrant_number == 1)
+      {
+        number_of_turns -= 1;
+      }
+      previous_quadrant_number = quadrant_number;
+    }
+
+    // Calculate the total angle
+    float total_angle = (number_of_turns * 360) + corrected_angle;
+    int encoderValue = total_angle;
     SSD1306 DISPLAY;
     HAL_TIM_Base_Start(&htim2);
     DISPLAY.SSD1306_Init();
@@ -374,6 +437,8 @@ int encoder()
     DISPLAY.SSD1306_UpdateScreen();
     DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
     DISPLAY.SSD1306_UpdateScreen();
+    // Store the corrected angle for the next iteration
+    previous_corrected_angle = corrected_angle;
   }
   else
   {
