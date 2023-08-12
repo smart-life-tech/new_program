@@ -10,7 +10,7 @@
 #define I2C_ENCODER_ADDRESS 0x36 // Replace with your encoder's I2C address
 
 UART_HandleTypeDef huart2; // Change this to your UART handle
-
+int encoderValue = 0;
 uint8_t data;
 HAL_StatusTypeDef status;
 uint8_t low_byte, high_byte;
@@ -360,10 +360,10 @@ void step(int steps, uint8_t direction, uint16_t delay)
 int encoder()
 {
   // Read low byte of raw angle data from AS5600 sensor
-  status = HAL_I2C_Mem_Read(&hi2c1, AS5600_ADDRESS << 1, 0x0D, 1, &low_byte, 1, HAL_MAX_DELAY);
+  status = HAL_I2C_Mem_Read(&hi2c1, I2C_ENCODER_ADDRESS << 1, 0x0D, 1, &low_byte, 1, HAL_MAX_DELAY);
 
   // Read high byte of raw angle data from AS5600 sensor
-  status |= HAL_I2C_Mem_Read(&hi2c1, AS5600_ADDRESS << 1, 0x0C, 1, &high_byte, 1, HAL_MAX_DELAY);
+  status |= HAL_I2C_Mem_Read(&hi2c1, I2C_ENCODER_ADDRESS << 1, 0x0C, 1, &high_byte, 1, HAL_MAX_DELAY);
 
   if (status == HAL_OK)
   {
@@ -422,7 +422,7 @@ int encoder()
 
     // Calculate the total angle
     float total_angle = (number_of_turns * 360) + corrected_angle;
-    int encoderValue = total_angle;
+    encoderValue = total_angle;
     SSD1306 DISPLAY;
     HAL_TIM_Base_Start(&htim2);
     DISPLAY.SSD1306_Init();
