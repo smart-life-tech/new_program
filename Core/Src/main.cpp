@@ -525,10 +525,10 @@ int main(void)
     display();
     float encoder_value = encoder();
 
-    // Calculate error
-    float error = CalculateError(encoder_value, 200);
+    // Calculate error// the error is the actual distance the stepper is going to move
+    float error = CalculateError(encoder_value, 200);// the 200 is what  i assumed will be the target step
 
-    // Calculate PID control signal
+    // Calculate PID control signal according to the error above
     float control_signal = CalculatePIDControlSignal(error);
 
     // Apply control signal to stepper motor
