@@ -346,11 +346,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
     HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_RESET);
   for (x = 0; x < steps; x = x + 1)
   {
-    std::string displayStr = "steps: " + std::to_string(x);
-    DISPLAY.SSD1306_GotoXY(0, 0);
-    DISPLAY.SSD1306_UpdateScreen();
-    DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
-    DISPLAY.SSD1306_UpdateScreen();
+    display();
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_SET);
     microDelay(delay);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_RESET);
@@ -363,7 +359,7 @@ int encoder()
   HAL_StatusTypeDef statuss = HAL_I2C_Mem_Read(&hi2c2, I2C_ENCODER_ADDRESS << 1, 0x0D, 1, &low_byte, 1, HAL_MAX_DELAY);
 
   // Read high byte of raw angle data from AS5600 sensor
-  statuss |= HAL_I2C_Mem_Read(&hi2c2, I2C_ENCODER_ADDRESS << 1, 0x0C, 1, &high_byte, 1, HAL_MAX_DELAY);
+  HAL_StatusTypeDef statuss = HAL_I2C_Mem_Read(&hi2c2, I2C_ENCODER_ADDRESS << 1, 0x0C, 1, &high_byte, 1, HAL_MAX_DELAY);
 
   if (statuss == HAL_OK)
   {
@@ -432,11 +428,6 @@ int encoder()
     // Convert data to actual encoder value
     snprintf(uartBuffer, sizeof(uartBuffer), "Encoder Value: %d\r\n", encoderValue);
     HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
-    std::string displayStr = "encoder: " + std::to_string(encoderValue);
-    DISPLAY.SSD1306_GotoXY(30, 0);
-    DISPLAY.SSD1306_UpdateScreen();
-    DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
-    DISPLAY.SSD1306_UpdateScreen();
     // Store the corrected angle for the next iteration
     previous_corrected_angle = corrected_angle;
   }
@@ -469,6 +460,19 @@ void UpdateIntegralAndDerivative(float error)
 {
   // Update integral and derivative terms for the next iteration
   integral += error;
+}
+void display()
+{
+  std::string displayStr = "steps: " + std::to_string(x);
+  DISPLAY.SSD1306_GotoXY(0, 0);
+  DISPLAY.SSD1306_UpdateScreen();
+  DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
+  //DISPLAY.SSD1306_UpdateScreen();
+  displayStr = "encod: " + std::to_string(encoderValue);
+  DISPLAY.SSD1306_GotoXY(30, 0);
+  DISPLAY.SSD1306_UpdateScreen();
+  DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
+  DISPLAY.SSD1306_UpdateScreen();
 }
 int main(void)
 {
@@ -518,6 +522,7 @@ int main(void)
     */
     // Read encoder value
     DISPLAY.SSD1306_Clear();
+    display();
     float encoder_value = encoder();
 
     // Calculate error
