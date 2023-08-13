@@ -3,13 +3,15 @@
 #include "ssd1306.h"
 #include "SSD1306I2C.h"
 #include <string>
-
+#include "usart.h"
 #include "i2c.h"
 #include "gpio.h"
+uint16_t desiredEncoderValue = 200; // Change this to your desired encoder value
 
 #define I2C_ENCODER_ADDRESS 0x36 // Replace with your encoder's I2C address
-
+char message[] = "Hello from STM32!\r\n";
 UART_HandleTypeDef huart2; // Change this to your UART handle
+UART_HandleTypeDef huart1;
 int encoderValue = 100;
 int lastEncoderValue = 10;
 int realEncoderValue = 5;
@@ -355,6 +357,7 @@ int encoder()
     char uartBuffer[32];
     snprintf(uartBuffer, sizeof(uartBuffer), "Raw Angle: %d\r\n", raw_angle);
     HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     // Convert raw angle to degrees
     deg_angle = raw_angle * 0.087890625;
 
@@ -413,6 +416,7 @@ int encoder()
     // Convert data to actual encoder value
     snprintf(uartBuffer, sizeof(uartBuffer), "Encoder Value: %d\r\n", encoderValue);
     HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart1, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
     // Store the corrected angle for the next iteration
     previous_corrected_angle = corrected_angle;
   }
@@ -425,6 +429,7 @@ int encoder()
 }
 void step(int steps, uint8_t direction, uint16_t delay)
 {
+  desiredEncoderValue = steps;
   SSD1306 DISPLAY;
   HAL_TIM_Base_Start(&htim2);
   DISPLAY.SSD1306_Init();
@@ -433,7 +438,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
     HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_SET);
   else
     HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_RESET);
-  for (x = 0; x < steps; x = x + 1)
+  while (realEncoderValue < desiredEncoderValue)
   {
     // DISPLAY.SSD1306_Clear();
     float encoder_value = encoder();
@@ -447,6 +452,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
     microDelay(delay);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_RESET);
     microDelay(delay);
+    x++;
   }
 }
 
@@ -504,6 +510,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_USART1_UART_Init(); // Initialize your UART peripheral
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   MX_I2C2_Init();
