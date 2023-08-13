@@ -7,7 +7,7 @@
 #include "i2c.h"
 #include "gpio.h"
 int desiredEncoderValue = 200; // Change this to your desired encoder value
-
+bool rotate = true;
 #define I2C_ENCODER_ADDRESS 0x36 // Replace with your encoder's I2C address
 char message[] = "Hello from STM32!\r\n";
 UART_HandleTypeDef huart2; // Change this to your UART handle
@@ -443,11 +443,12 @@ void step(int steps, uint8_t direction, uint16_t delay)
   {
     // DISPLAY.SSD1306_Clear();
     float encoder_value = encoder();
-    if (encoder_value != lastEncoderValue)
+    if (encoder_value != lastEncoderValue )
     {
       realEncoderValue++;
       lastEncoderValue = encoder_value;
     }
+
     display(realEncoderValue, desiredEncoderValue);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_SET);
     microDelay(delay);
@@ -472,18 +473,26 @@ float CalculatePIDControlSignal(float error)
   integral += error;
   float derivative = error - prev_error;
   prev_error = error;
-  return Kp * error + Ki * integral + Kd * derivative;
+  return (Kp * error + Ki * integral + Kd * derivative) / 1000000; // angle to steps
 }
 void ControlStepperMotor(float control_signal)
 {
-  // Apply control signal to stepper motor (e.g., adjust PWM duty cycle)
-  if (control_signal > desiredEncoderValue)
+  if (rotate) // rotate if there is  a difference in encoder value so it mainains 200
   {
-    step(control_signal, 1, 5000); // forward
-  }
-  else if (control_signal < desiredEncoderValue)
-  {
-    step(control_signal, 0, 5000); // reverse
+    // Apply control signal to stepper motor (e.g., adjust PWM duty cycle)
+    if (control_signal > desiredEncoderValue)
+    {
+      step(control_signal - desiredEncoderValue, 1, 5000); // forward
+    }
+    else if (control_signal < desiredEncoderValue)
+    {
+      step(desiredEncoderValue - control_signal, 0, 5000); // reverse
+    }
+    else
+    {
+      // do nothing
+    }
+    rotate = false;
   }
 }
 void UpdateIntegralAndDerivative(float error)
@@ -539,7 +548,7 @@ int main(void)
   SSD1306 DISPLAY;
   HAL_TIM_Base_Start(&htim2);
   DISPLAY.SSD1306_Init();
-  step(200, 1, 5000); // move to the 200th step
+  step(200, 1, 5000); // move to the set 200th step at boot
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -564,8 +573,10 @@ int main(void)
     float encoder_value = encoder();
     if (encoder_value != lastEncoderValue)
     {
-      realEncoderValue++; // encoder step counter
+      realEncoderValue++;                                     // encoder step counter
+      realEncoderValue = realEncoderValue - lastEncoderValue; // changes in value is what will be rotated
       lastEncoderValue = encoder_value;
+      rotate = true;
     }
     DISPLAY.SSD1306_Clear();
     display(realEncoderValue, 200);
@@ -575,7 +586,7 @@ int main(void)
     HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     // Calculate PID control signal according to the error above
-    float control_signal = CalculatePIDControlSignal(error);
+    float control_signal = realEncoderValue; // CalculatePIDControlSignal(error); 400 is for testung deviation correction
 
     snprintf(uartBuffer, sizeof(uartBuffer), "control signal pid: %d\r\n\n", control_signal);
     HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
