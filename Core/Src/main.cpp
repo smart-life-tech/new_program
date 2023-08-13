@@ -433,14 +433,14 @@ void step(int steps, uint8_t direction, uint16_t delay)
   else
     HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_RESET);
   for (x = 0; x < steps; x = x + 1)
-  {
+  { DISPLAY.SSD1306_Clear();
     float encoder_value = encoder();
     if (encoder_value != lastEncoderValue)
     {
       realEncoderValue++;
       lastEncoderValue = encoder_value;
     }
-    display(realEncoderValue, step);
+    display(realEncoderValue, x);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_SET);
     microDelay(delay);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_RESET);
