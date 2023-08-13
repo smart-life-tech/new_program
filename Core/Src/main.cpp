@@ -447,7 +447,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
       realEncoderValue++;
       lastEncoderValue = encoder_value;
     }
-    display(realEncoderValue, x);
+    display(realEncoderValue, desiredEncoderValue);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_SET);
     microDelay(delay);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_RESET);
@@ -455,7 +455,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
     x++;
     snprintf(uartBuffer, sizeof(uartBuffer), "Encoder Value: %d\r\n\n", encoder_value);
     HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
-    snprintf(uartBuffer, sizeof(uartBuffer), "     step value: %d\r\n", x);
+    snprintf(uartBuffer, sizeof(uartBuffer), "     step value: %d\r\n", desiredEncoderValue);
     HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
   }
 }
