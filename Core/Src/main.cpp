@@ -428,12 +428,14 @@ void step(int steps, uint8_t direction, uint16_t delay)
   SSD1306 DISPLAY;
   HAL_TIM_Base_Start(&htim2);
   DISPLAY.SSD1306_Init();
+  realEncoderValue = 0;
   if (direction == 0)
     HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_SET);
   else
     HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_RESET);
   for (x = 0; x < steps; x = x + 1)
-  { DISPLAY.SSD1306_Clear();
+  {
+    // DISPLAY.SSD1306_Clear();
     float encoder_value = encoder();
     if (encoder_value != lastEncoderValue)
     {
