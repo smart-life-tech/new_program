@@ -14,7 +14,7 @@ UART_HandleTypeDef huart2; // Change this to your UART handle
 UART_HandleTypeDef huart1;
 int encoderValue = 100;
 int lastEncoderValue = 10;
-int realEncoderValue = 5;
+int realEncoderValue = 0;
 uint8_t data;
 HAL_StatusTypeDef status;
 uint8_t low_byte, high_byte;
@@ -434,7 +434,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
   HAL_TIM_Base_Start(&htim2);
   DISPLAY.SSD1306_Init();
   realEncoderValue = 0;
-   display(realEncoderValue, desiredEncoderValue);
+  display(realEncoderValue, desiredEncoderValue);
   if (direction == 0)
     HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_SET);
   else
@@ -448,7 +448,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
       realEncoderValue++;
       lastEncoderValue = encoder_value;
     }
-    stepScreen(realEncoderValue);
+    display(realEncoderValue, desiredEncoderValue);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_SET);
     microDelay(delay);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_RESET);
@@ -464,7 +464,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
 float CalculateError(float encoder_value, int maintain)
 {
   // Calculate and return error between desired position and encoder value
-  encoder_value - maintain; // 200 steps as a sample
+  maintain - encoder_value; // 200 steps as a sample
 }
 float CalculatePIDControlSignal(float error)
 {
@@ -477,7 +477,14 @@ float CalculatePIDControlSignal(float error)
 void ControlStepperMotor(float control_signal)
 {
   // Apply control signal to stepper motor (e.g., adjust PWM duty cycle)
-  step(control_signal, 1, 5000); // forward
+  if (control_signal > desiredEncoderValue)
+  {
+    step(control_signal, 1, 5000); // forward
+  }
+  else if (control_signal < desiredEncoderValue)
+  {
+    step(control_signal, 0, 5000); // reverse
+  }
 }
 void UpdateIntegralAndDerivative(float error)
 {
@@ -497,8 +504,9 @@ void display(int enc, int ste)
   DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
   DISPLAY.SSD1306_UpdateScreen();
 }
-void stepScreen(int enc){
-   displayStr = std::to_string(enc);
+void stepScreen(int enc)
+{
+  std::string displayStr = std::to_string(enc);
   DISPLAY.SSD1306_GotoXY(6, 30);
   // DISPLAY.SSD1306_UpdateScreen();
   DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
@@ -550,7 +558,6 @@ int main(void)
     }
    // step(800, 1, 5000); // 800 steps (4 revolutions ) CV
     encoder();
-    */
     // Read encoder value
     DISPLAY.SSD1306_Clear();
     display(realEncoderValue, 200);
@@ -559,8 +566,9 @@ int main(void)
     {
       realEncoderValue++;
       lastEncoderValue = encoder_value;
-    }
-
+    }*/
+    DISPLAY.SSD1306_Clear();
+    display(realEncoderValue, 200);
     // Calculate error// the error is the actual distance the stepper is going to move
     float error = CalculateError(realEncoderValue, 200); // the 200 is what  i assumed will be the target step
     snprintf(uartBuffer, sizeof(uartBuffer), "Error: %d\r\n\n", realEncoderValue);
