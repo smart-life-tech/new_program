@@ -476,7 +476,7 @@ float CalculatePIDControlSignal(float error)
 void ControlStepperMotor(float control_signal)
 {
   // Apply control signal to stepper motor (e.g., adjust PWM duty cycle)
-  step(control_signal, 1, 1000); // forward
+  step(control_signal, 1, 5000); // forward
 }
 void UpdateIntegralAndDerivative(float error)
 {
@@ -554,18 +554,21 @@ int main(void)
     DISPLAY.SSD1306_Clear();
     display(realEncoderValue, 200);
     // Calculate error// the error is the actual distance the stepper is going to move
-    float error = CalculateError(encoder_value, 200); // the 200 is what  i assumed will be the target step
-
+    float error = CalculateError(realEncoderValue, 200); // the 200 is what  i assumed will be the target step
+    snprintf(uartBuffer, sizeof(uartBuffer), "Error: %d\r\n\n",realEncoderValue);
+    HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     // Calculate PID control signal according to the error above
     float control_signal = CalculatePIDControlSignal(error);
 
+    snprintf(uartBuffer, sizeof(uartBuffer), "control signal pid: %d\r\n\n", control_signal);
+    HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     // Apply control signal to stepper motor
     ControlStepperMotor(control_signal);
 
     // Update integral and derivative terms
     UpdateIntegralAndDerivative(error);
 
-    HAL_Delay(1000);
+    HAL_Delay(5000);
 
     /* USER CODE END WHILE */
 
