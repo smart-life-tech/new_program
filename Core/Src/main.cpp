@@ -10,7 +10,9 @@
 #define I2C_ENCODER_ADDRESS 0x36 // Replace with your encoder's I2C address
 
 UART_HandleTypeDef huart2; // Change this to your UART handle
-int encoderValue = 0;
+int encoderValue = 100;
+int lastEncoderValue = 10;
+int realEncoderValue = 5;
 uint8_t data;
 HAL_StatusTypeDef status;
 uint8_t low_byte, high_byte;
@@ -461,16 +463,16 @@ void UpdateIntegralAndDerivative(float error)
   // Update integral and derivative terms for the next iteration
   integral += error;
 }
-void display()
+void display(int enc)
 {
   std::string displayStr = "steps: " + std::to_string(x);
   DISPLAY.SSD1306_GotoXY(0, 0);
-  DISPLAY.SSD1306_UpdateScreen();
-  DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
   //DISPLAY.SSD1306_UpdateScreen();
-  displayStr = "encod: " + std::to_string(encoderValue);
-  DISPLAY.SSD1306_GotoXY(30, 0);
-  DISPLAY.SSD1306_UpdateScreen();
+  DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
+  // DISPLAY.SSD1306_UpdateScreen();
+  displayStr = "enc: " + std::to_string(enc);
+  DISPLAY.SSD1306_GotoXY(0, 30);
+ // DISPLAY.SSD1306_UpdateScreen();
   DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
   DISPLAY.SSD1306_UpdateScreen();
 }
@@ -521,12 +523,17 @@ int main(void)
     encoder();
     */
     // Read encoder value
-    DISPLAY.SSD1306_Clear();
-    display();
-    float encoder_value = encoder();
 
+    float encoder_value = encoder();
+    if (encoder_value != lastEncoderValue)
+    {
+      realEncoderValue++;
+      lastEncoderValue = encoder_value;
+    }
+    DISPLAY.SSD1306_Clear();
+    display(realEncoderValue);
     // Calculate error// the error is the actual distance the stepper is going to move
-    float error = CalculateError(encoder_value, 200);// the 200 is what  i assumed will be the target step
+    float error = CalculateError(encoder_value, 200); // the 200 is what  i assumed will be the target step
 
     // Calculate PID control signal according to the error above
     float control_signal = CalculatePIDControlSignal(error);
