@@ -414,9 +414,9 @@ int encoder()
     // Example: If the encoder sends position data, you can use it here.
     // For example, assuming the encoder data represents an integer position:
     // Convert data to actual encoder value
-    snprintf(uartBuffer, sizeof(uartBuffer), "Encoder Value: %d\r\n", encoderValue);
-    HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
-    HAL_UART_Transmit(&huart1, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
+    // snprintf(uartBuffer, sizeof(uartBuffer), "Encoder Value: %d\r\n", encoderValue);
+    // HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
+
     // Store the corrected angle for the next iteration
     previous_corrected_angle = corrected_angle;
   }
@@ -453,6 +453,10 @@ void step(int steps, uint8_t direction, uint16_t delay)
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_RESET);
     microDelay(delay);
     x++;
+    snprintf(uartBuffer, sizeof(uartBuffer), "Encoder Value: %d\r\n\n", encoder_value);
+    HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
+    snprintf(uartBuffer, sizeof(uartBuffer), "     step value: %d\r\n", x);
+    HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
   }
 }
 
