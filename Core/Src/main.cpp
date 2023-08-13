@@ -337,24 +337,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-void step(int steps, uint8_t direction, uint16_t delay)
-{
-  SSD1306 DISPLAY;
-  HAL_TIM_Base_Start(&htim2);
-  DISPLAY.SSD1306_Init();
-  if (direction == 0)
-    HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_SET);
-  else
-    HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_RESET);
-  for (x = 0; x < steps; x = x + 1)
-  {
-    display(realEncoderValue);
-    HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_SET);
-    microDelay(delay);
-    HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_RESET);
-    microDelay(delay);
-  }
-}
+
 int encoder()
 {
   // Read low byte of raw angle data from AS5600 sensor
@@ -440,6 +423,31 @@ int encoder()
   }
   return encoderValue;
 }
+void step(int steps, uint8_t direction, uint16_t delay)
+{
+  SSD1306 DISPLAY;
+  HAL_TIM_Base_Start(&htim2);
+  DISPLAY.SSD1306_Init();
+  if (direction == 0)
+    HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_SET);
+  else
+    HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_RESET);
+  for (x = 0; x < steps; x = x + 1)
+  {
+    float encoder_value = encoder();
+    if (encoder_value != lastEncoderValue)
+    {
+      realEncoderValue++;
+      lastEncoderValue = encoder_value;
+    }
+    display(realEncoderValue, step);
+    HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_SET);
+    microDelay(delay);
+    HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_RESET);
+    microDelay(delay);
+  }
+}
+
 float CalculateError(float encoder_value, int maintain)
 {
   // Calculate and return error between desired position and encoder value
@@ -463,16 +471,16 @@ void UpdateIntegralAndDerivative(float error)
   // Update integral and derivative terms for the next iteration
   integral += error;
 }
-void display(int enc)
+void display(int enc, int ste)
 {
-  std::string displayStr = "steps: " + std::to_string(x);
+  std::string displayStr = "steps: " + std::to_string(ste);
   DISPLAY.SSD1306_GotoXY(0, 0);
-  //DISPLAY.SSD1306_UpdateScreen();
+  // DISPLAY.SSD1306_UpdateScreen();
   DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
   // DISPLAY.SSD1306_UpdateScreen();
   displayStr = "enc: " + std::to_string(enc);
   DISPLAY.SSD1306_GotoXY(0, 30);
- // DISPLAY.SSD1306_UpdateScreen();
+  // DISPLAY.SSD1306_UpdateScreen();
   DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
   DISPLAY.SSD1306_UpdateScreen();
 }
@@ -531,7 +539,7 @@ int main(void)
       lastEncoderValue = encoder_value;
     }
     DISPLAY.SSD1306_Clear();
-    display(realEncoderValue);
+    display(realEncoderValue, 200);
     // Calculate error// the error is the actual distance the stepper is going to move
     float error = CalculateError(encoder_value, 200); // the 200 is what  i assumed will be the target step
 
