@@ -6,7 +6,7 @@
 #include "usart.h"
 #include "i2c.h"
 #include "gpio.h"
-uint16_t desiredEncoderValue = 200; // Change this to your desired encoder value
+int desiredEncoderValue = 200; // Change this to your desired encoder value
 
 #define I2C_ENCODER_ADDRESS 0x36 // Replace with your encoder's I2C address
 char message[] = "Hello from STM32!\r\n";
@@ -455,8 +455,8 @@ void step(int steps, uint8_t direction, uint16_t delay)
     x++;
     snprintf(uartBuffer, sizeof(uartBuffer), "Encoder Value: %d\r\n\n", encoder_value);
     HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
-    snprintf(uartBuffer, sizeof(uartBuffer), "     step value: %d\r\n", desiredEncoderValue);
-    HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
+   // snprintf(uartBuffer, sizeof(uartBuffer), "     step value: %d\r\n", desiredEncoderValue);
+    //HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
   }
 }
 
