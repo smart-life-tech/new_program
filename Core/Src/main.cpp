@@ -348,7 +348,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
     HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_RESET);
   for (x = 0; x < steps; x = x + 1)
   {
-    display();
+    display(realEncoderValue);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_SET);
     microDelay(delay);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_RESET);
