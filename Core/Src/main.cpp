@@ -449,7 +449,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
       lastEncoderValue = encoder_value;
     }
 
-    display(realEncoderValue, desiredEncoderValue);
+    stepScreen(realEncoderValue, desiredEncoderValue, direction);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_SET);
     microDelay(delay);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_RESET);
@@ -509,17 +509,35 @@ void display(int enc, int ste)
   DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
   // DISPLAY.SSD1306_UpdateScreen();
   displayStr = "enc: " + std::to_string(enc);
-  DISPLAY.SSD1306_GotoXY(0, 30);
+  DISPLAY.SSD1306_GotoXY(0, 20);
   // DISPLAY.SSD1306_UpdateScreen();
   DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
   DISPLAY.SSD1306_UpdateScreen();
 }
-void stepScreen(int enc)
+void stepScreen(int enc, int ste, int dir)
 {
-  std::string displayStr = std::to_string(enc);
-  DISPLAY.SSD1306_GotoXY(6, 30);
+  std::string displayStr = "steps: " + std::to_string(ste);
+  DISPLAY.SSD1306_GotoXY(0, 0);
   // DISPLAY.SSD1306_UpdateScreen();
   DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
+  // DISPLAY.SSD1306_UpdateScreen();
+  displayStr = "enc: " + std::to_string(enc);
+  DISPLAY.SSD1306_GotoXY(0, 20);
+  // DISPLAY.SSD1306_UpdateScreen();
+  DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
+
+  if (dir == 1)
+  {
+    displayStr = "forward";
+    DISPLAY.SSD1306_GotoXY(0, 40);
+    DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
+  }
+  else
+  {
+    displayStr = "reverse";
+    DISPLAY.SSD1306_GotoXY(0, 40);
+    DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
+  }
   DISPLAY.SSD1306_UpdateScreen();
 }
 int main(void)
