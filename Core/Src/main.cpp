@@ -443,7 +443,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
   {
     // DISPLAY.SSD1306_Clear();
     float encoder_value = encoder();
-    if (encoder_value != lastEncoderValue )
+    if (encoder_value != lastEncoderValue)
     {
       realEncoderValue++;
       lastEncoderValue = encoder_value;
@@ -460,6 +460,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
     // snprintf(uartBuffer, sizeof(uartBuffer), "     step value: %d\r\n", desiredEncoderValue);
     // HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
   }
+  realEncoderValue = 0;
 }
 
 float CalculateError(float encoder_value, int maintain)
@@ -573,10 +574,13 @@ int main(void)
     float encoder_value = encoder();
     if (encoder_value != lastEncoderValue)
     {
-      realEncoderValue++;                                     // encoder step counter
-      realEncoderValue = realEncoderValue - lastEncoderValue; // changes in value is what will be rotated
-      lastEncoderValue = encoder_value;
-      rotate = true;
+      realEncoderValue++;        // encoder step counter
+      if (realEncoderValue > 10) // debounce
+      {
+        realEncoderValue = realEncoderValue - lastEncoderValue; // changes in value is what will be rotated
+        lastEncoderValue = encoder_value;
+        rotate = true;
+      }
     }
     DISPLAY.SSD1306_Clear();
     display(realEncoderValue, 200);
