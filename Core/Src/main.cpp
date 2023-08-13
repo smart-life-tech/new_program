@@ -575,10 +575,10 @@ int main(void)
     if (encoder_value != lastEncoderValue)
     {
       realEncoderValue++;        // encoder step counter
-      if (realEncoderValue > 10) // debounce
+      if (realEncoderValue > 200) // debounce
       {
         realEncoderValue = realEncoderValue - lastEncoderValue; // changes in value is what will be rotated
-        lastEncoderValue = encoder_value;
+        lastEncoderValue = realEncoderValue;
         rotate = true;
       }
     }
