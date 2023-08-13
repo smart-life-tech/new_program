@@ -595,7 +595,7 @@ int main(void)
     snprintf(uartBuffer, sizeof(uartBuffer), "control signal pid: %d\r\n\n", control_signal);
     HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
-    // Apply control signal to stepper motor
+    // Apply control signal to stepper motor if you disable this line below the stepper will only be doing a one time movment
     ControlStepperMotor(control_signal);
 
     // Update integral and derivative terms
