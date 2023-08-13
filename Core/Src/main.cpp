@@ -539,7 +539,7 @@ int main(void)
   SSD1306 DISPLAY;
   HAL_TIM_Base_Start(&htim2);
   DISPLAY.SSD1306_Init();
-  // step(200, 1, 5000); // move to the 200th step
+  step(200, 1, 5000); // move to the 200th step
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -560,23 +560,25 @@ int main(void)
     encoder();
     // Read encoder value
     DISPLAY.SSD1306_Clear();
-    display(realEncoderValue, 200);
+    display(realEncoderValue, 200);*/
     float encoder_value = encoder();
     if (encoder_value != lastEncoderValue)
     {
-      realEncoderValue++;
+      realEncoderValue++; // encoder step counter
       lastEncoderValue = encoder_value;
-    }*/
+    }
     DISPLAY.SSD1306_Clear();
     display(realEncoderValue, 200);
     // Calculate error// the error is the actual distance the stepper is going to move
     float error = CalculateError(realEncoderValue, 200); // the 200 is what  i assumed will be the target step
     snprintf(uartBuffer, sizeof(uartBuffer), "Error: %d\r\n\n", realEncoderValue);
+    HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     // Calculate PID control signal according to the error above
     float control_signal = CalculatePIDControlSignal(error);
 
     snprintf(uartBuffer, sizeof(uartBuffer), "control signal pid: %d\r\n\n", control_signal);
+    HAL_UART_Transmit(&huart2, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     // Apply control signal to stepper motor
     ControlStepperMotor(control_signal);
