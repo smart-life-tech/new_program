@@ -7,7 +7,7 @@
 #include "i2c.h"
 #include "gpio.h"
 int desiredEncoderValue = 200; // Change this to your desired encoder value
-bool rotate = true;
+bool rotate = false;
 #define I2C_ENCODER_ADDRESS 0x36 // Replace with your encoder's I2C address
 char message[] = "Hello from STM32!\r\n";
 UART_HandleTypeDef huart2; // Change this to your UART handle
@@ -575,7 +575,7 @@ int main(void)
     if (encoder_value != lastEncoderValue)
     {
       realEncoderValue++;        // encoder step counter
-      if (realEncoderValue > 200) // debounce
+      if (realEncoderValue > 20) // debounce
       {
         realEncoderValue = realEncoderValue - lastEncoderValue; // changes in value is what will be rotated
         lastEncoderValue = realEncoderValue;
