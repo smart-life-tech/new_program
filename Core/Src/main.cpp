@@ -434,6 +434,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
   HAL_TIM_Base_Start(&htim2);
   DISPLAY.SSD1306_Init();
   realEncoderValue = 0;
+   display(realEncoderValue, desiredEncoderValue);
   if (direction == 0)
     HAL_GPIO_WritePin(DIR_PORT, DIR_PIN, GPIO_PIN_SET);
   else
@@ -447,7 +448,7 @@ void step(int steps, uint8_t direction, uint16_t delay)
       realEncoderValue++;
       lastEncoderValue = encoder_value;
     }
-    display(realEncoderValue, desiredEncoderValue);
+    stepScreen(realEncoderValue);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_SET);
     microDelay(delay);
     HAL_GPIO_WritePin(STEP_PORT, STEP_PIN, GPIO_PIN_RESET);
@@ -455,8 +456,8 @@ void step(int steps, uint8_t direction, uint16_t delay)
     x++;
     snprintf(uartBuffer, sizeof(uartBuffer), "Encoder Value: %d\r\n\n", encoder_value);
     HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
-   // snprintf(uartBuffer, sizeof(uartBuffer), "     step value: %d\r\n", desiredEncoderValue);
-    //HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
+    // snprintf(uartBuffer, sizeof(uartBuffer), "     step value: %d\r\n", desiredEncoderValue);
+    // HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
   }
 }
 
@@ -496,6 +497,13 @@ void display(int enc, int ste)
   DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
   DISPLAY.SSD1306_UpdateScreen();
 }
+void stepScreen(int enc){
+   displayStr = std::to_string(enc);
+  DISPLAY.SSD1306_GotoXY(6, 30);
+  // DISPLAY.SSD1306_UpdateScreen();
+  DISPLAY.SSD1306_Puts(const_cast<char *>(displayStr.c_str()), &Font_11x18, 0x01);
+  DISPLAY.SSD1306_UpdateScreen();
+}
 int main(void)
 {
 
@@ -523,7 +531,7 @@ int main(void)
   SSD1306 DISPLAY;
   HAL_TIM_Base_Start(&htim2);
   DISPLAY.SSD1306_Init();
-  step(200, 1, 5000); // move to the 200th step
+  // step(200, 1, 5000); // move to the 200th step
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -544,18 +552,18 @@ int main(void)
     encoder();
     */
     // Read encoder value
-
+    DISPLAY.SSD1306_Clear();
+    display(realEncoderValue, 200);
     float encoder_value = encoder();
     if (encoder_value != lastEncoderValue)
     {
       realEncoderValue++;
       lastEncoderValue = encoder_value;
     }
-    DISPLAY.SSD1306_Clear();
-    display(realEncoderValue, 200);
+
     // Calculate error// the error is the actual distance the stepper is going to move
     float error = CalculateError(realEncoderValue, 200); // the 200 is what  i assumed will be the target step
-    snprintf(uartBuffer, sizeof(uartBuffer), "Error: %d\r\n\n",realEncoderValue);
+    snprintf(uartBuffer, sizeof(uartBuffer), "Error: %d\r\n\n", realEncoderValue);
     HAL_UART_Transmit(&huart1, (uint8_t *)uartBuffer, strlen(uartBuffer), HAL_MAX_DELAY);
     // Calculate PID control signal according to the error above
     float control_signal = CalculatePIDControlSignal(error);
